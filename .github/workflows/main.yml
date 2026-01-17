@@ -1,0 +1,42 @@
+name: iOS IPA Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Python Kurulumu
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Bağımlılıkları Yükle
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install kivy-ios plyer
+
+      - name: iOS Projesini Oluştur
+        run: |
+          toolchain build python3 kivy
+          toolchain create WaterApp .
+          
+      - name: IPA Paketle (Unsigned)
+        run: |
+          # Bu aşama projeyi Xcode projesine dönüştürür
+          # AltStore ile yükleyeceğiniz için imzasız (unsigned) olması yeterlidir
+          xcodebuild -project WaterApp-ios/waterapp.xcodeproj \
+            -scheme waterapp \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Dosyayı Kaydet
+        uses: actions/upload-artifact@v3
+        with:
+          name: WaterApp-IPA
+          path: build/Build/Products/Release-iphoneos/*.app
