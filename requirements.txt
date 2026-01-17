@@ -1,0 +1,4 @@
+kivy
+plyer
+kivy-ios
+Cython==0.29.33
